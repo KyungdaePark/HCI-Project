@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>English Study</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #fff3e0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #ff8c00;
+            font-size: 3em;
+        }
+    
+        .image-container {
+            display: flex;
+            flex-wrap: nowrap; /* Prevent wrapping to ensure horizontal arrangement */
+            overflow-x: auto; /* Enable horizontal scrolling for small screens */
+            gap: 20px;
+            padding: 20px;
+        }
+        .clickable-image {
+            cursor: pointer;
+            transition: transform 0.2s;
+            max-width: 200px; /* Reduce the maximum width of images */
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .clickable-image:hover {
+            transform: scale(1.05);
+        }
+        #display-word {
+            font-size: 5em;
+            text-align: center;
+            margin-top: 20px;
+            letter-spacing: 0.05em;
+            color: #f464a7;
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+        }
+        #help-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        #help-button img {
+            max-width: 30px;
+            max-height: 30px;
+        }
+        
+        #help-popup {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            z-index: 100;
+            font-size: 14px;
+            color: #333;
+        }
+        .back-button {
+            padding: 15px 30px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            cursor: pointer;
+            border: none;
+            border-radius: 20px;
+            background-color: #ffcccb;
+            color: #ff4500;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .back-button:hover {
+            background-color: #ff7f7f;
+            transform: scale(1.05);
+            box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.25);
+        }
+    </style>
+    
+</head>
+<body>
+    <h1>눌러~ 눌러~</h1>
+    <div id="help-button" style="position: absolute; top: 10px; right: 10px; cursor: pointer;">
+        <img src="{% static 'images/help.png' %}" alt="Help" />
+    </div>
+
+    <!-- 도움말 팝업 -->
+    <div id="help-popup" style="display: none; position: absolute; top: 50px; right: 10px; background-color: white; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.2); max-width: 300px;">
+        <p>이미지를 누르면 해당 이미지의 이름이 영어로 송출됩니다. </p>
+    </div>  
+    <div class="image-container">
+        <!-- 각 이미지에 대한 요소 추가 -->
+        <img src="{% static 'images/lion.png' %}" alt="Lion" class="clickable-image">
+        <img src="{% static 'images/cat.png' %}" alt="Cat" class="clickable-image">
+        <img src="{% static 'images/banana.png' %}" alt="Banana" class="clickable-image">
+        <img src="{% static 'images/apple.png' %}" alt="Apple" class="clickable-image">
+    </div>
+    <div id="display-word"></div>
+    
+    <!-- 뒤로 가기 버튼 -->
+    <button onclick="window.location.href='/'" class="back-button">홈으로 가기</button>
+
+    <script>
+        document.querySelectorAll('.clickable-image').forEach(image => {
+            image.addEventListener('click', () => {
+                const word = image.alt; // alt 속성에서 단어 가져오기
+                displayWord(word)
+                speak(word);
+                speaka(word);
+            });
+        });
+        document.getElementById('help-button').addEventListener('click', function() {
+            var helpPopup = document.getElementById('help-popup');
+            helpPopup.style.display = 'block'; // 팝업을 보이게 설정
+            event.stopPropagation(); // 이벤트 버블링을 방지
+            
+        });
+        
+        window.addEventListener('click', function(event) {
+            var helpPopup = document.getElementById('help-popup');
+            if (event.target !== helpPopup && !helpPopup.contains(event.target) && event.target !== document.getElementById('help-button')) {
+                helpPopup.style.display = 'none';
+            }
+        });
+
+        // 도움말 팝업 내부의 클릭 이벤트가 팝업을 닫지 않도록 합니다.
+        document.getElementById('help-popup').addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(utterance);
+        }
+        function speaka(text) {
+            // 알파벳 한 글자씩 분리합니다.
+            const letters = text.split('');
+        
+            // 각 글자에 대한 음성 항목을 생성하고 음성 큐에 추가합니다.
+            letters.forEach(letter => {
+                const utterance = new SpeechSynthesisUtterance(letter);
+                speechSynthesis.speak(utterance);
+            });
+        }
+
+        function displayWord(word) {
+            // 단어를 화면에 크게 표시
+            const displayElement = document.getElementById('display-word');
+            displayElement.textContent = word; // 대문자로 변환하여 표시
+        }
+    </script>
+</body>
+</html>

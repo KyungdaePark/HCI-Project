@@ -1,0 +1,287 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOLOv5 Webcam</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0e68c; /* 밝은 황금색 배경 */
+            font-family: 'Comic Sans MS', 'Arial', sans-serif; /* 어린이 친화적인 글꼴 */
+            color: #333; /* 읽기 쉬운 텍스트 색상 */
+            padding-top: 5vh;
+            position: relative; /* 상대 위치 설정 */
+        }
+        h1{
+            margin-top: 0; /* 상단 여백 제거 */
+            margin-bottom: 20px; /* 하단 여백 추가 */
+            font-size: 2em; /* 제목 폰트 크기 조정 */
+        }
+        #webcam {
+            max-width: 640px; /* 최대 너비 설정 */
+            max-height: 480px; /* 최대 높이 설정 */
+            border: 5px solid #ff69b4;
+            border-radius: 15px;
+            width: 100%; /* 너비를 100%로 설정하여 반응형으로 만듦 */
+            height: auto; /* 높이를 자동으로 조절하여 비율 유지 */
+            
+        }
+        #capture {
+            padding: 15px 30px;
+            margin-top: 20px;
+            font-size: 22px;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 4px #999;
+        }
+
+        #capture:hover {
+            background-color: #FDB9C8;
+            box-shadow: 0 2px #666;
+            transform: translateY(2px);
+        }
+
+        #class-name-display {
+            font-size: 5em;
+            text-align: center;
+            margin-top: 20px;
+            letter-spacing: 0.05em;
+            color: #f464a7;
+        }
+
+        #help-button {
+            position: fixed; /* 위치를 고정시킴 */
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            z-index: 100; /* 다른 요소 위에 나타나도록 설정 */
+        }
+        
+        #help-button img {
+            max-width: 30px; /* 이미지의 최대 너비를 30px로 제한 */
+            max-height: 30px; /* 이미지의 최대 높이를 30px로 제한 */
+        }
+        
+        
+        #help-popup {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background-color: #f8f8f8; /* 밝은 하얀색 */
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            z-index: 100; /* 다른 요소 위에 나타나도록 z-index 설정 */
+            font-size: 14px; /* 적절한 글자 크기 */
+            color: #333; /* 읽기 쉬운 텍스트 색상 */
+        }
+        
+
+        .link-button {
+            width: 200px; /* 버튼 너비 고정 */
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            background-color: #8bf775;
+            color: rgb(0, 0, 0);
+            box-shadow: 0 4px #999;
+        }
+
+        .options-menu {
+            position: absolute;
+            top: 100px; /* 웹캠에 더 가깝게 위치 조정 */
+            right: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .link-button:hover {
+            background-color: #fc84b2;
+            box-shadow: 0 2px #666;
+            transform: translateY(2px);
+        }
+        .link-button.game {
+            background-color: #89CFF0; /* 예: 파란색 */
+        }
+        .link-button.quiz {
+            background-color: #FDB9C8; /* 예: 분홍색 */
+        }
+        .link-button.english-study {
+            background-color: #8bf775; /* 예: 녹색 */
+        }
+        .link-button.draw {
+            background-color: #FFD700; /* 예: 금색 */
+        }
+
+        /* 태블릿 가로 모드용 미디어 쿼리 */
+        @media screen and (min-width: 768px) and (max-width: 1024px) {
+            body {
+                flex-direction: row; /* 가로 방향 레이아웃으로 변경 */
+                justify-content: center; /* 중앙 정렬 */
+                padding-top: 0; /* 상단 패딩 제거 */
+            }
+            #webcam {
+                max-width: 50%; /* 화면의 절반 크기로 조정 */
+                height: auto; /* 비율 유지 */
+            }
+            .options-menu {
+                position: static; /* 기본 배치로 변경 */
+                flex-direction: row; /* 가로 방향 배치 */
+                justify-content: center; /* 중앙 정렬 */
+                margin-top: 20px; /* 상단 여백 추가 */
+            }
+            .link-button {
+                margin: 0 10px; /* 좌우 여백 추가 */
+            }
+            #class-name-display {
+                position: static; /* 기본 배치로 변경 */
+                font-size: 2em; /* 폰트 크기 조정 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 id="title">카드를 보여줘</h1>
+    <video id="webcam" width="640" height="480" autoplay playsinline muted></video>
+    <!-- 도움말 버튼 -->
+    <div id="help-button" style="position: absolute; top: 10px; right: 10px; cursor: pointer;">
+        <img src="{% static 'images/help.png' %}" alt="Help" />
+    </div>
+
+    <!-- 도움말 팝업 -->
+    <div id="help-popup" style="display: none; position: absolute; top: 50px; right: 10px; background-color: white; padding: 10px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.2); max-width: 300px;">
+        <p>주어진 캐릭터 카드를 카메라에 보여주고 캡쳐버튼을 눌러보세요! </p>
+    </div>  
+
+    </div>
+    <button id="capture">찰칵</button>
+    <div id="class-name-display" style="display: none;"></div>
+    <!-- 오른쪽 위 옵션 메뉴에 링크 배치 -->
+    <div class="options-menu">
+        <a href="/game">
+            <button class="link-button game">게임</button>
+        </a>
+        <a href="/quiz">
+            <button class="link-button quiz">카드 맞추기</button>
+        </a>
+        <a href="/english-study">
+            <button class="link-button english-study">눌러 눌러</button>
+        </a>
+        <a href="/draw">
+            <button class="link-button draw">그림 그리기</button>
+        </a>
+    </div>
+    
+    
+    <script>
+        const video = document.getElementById('webcam');
+        const captureButton = document.getElementById('capture');
+
+        startWebcam();
+
+        captureButton.addEventListener('click', () => {
+            captureImage();
+        });
+
+        document.getElementById('help-button').addEventListener('click', function() {
+            var helpPopup = document.getElementById('help-popup');
+            helpPopup.style.display = 'block'; // 팝업을 보이게 설정
+            event.stopPropagation(); // 이벤트 버블링을 방지
+            
+        });
+        
+        window.addEventListener('click', function(event) {
+            var helpPopup = document.getElementById('help-popup');
+            if (event.target !== helpPopup && !helpPopup.contains(event.target) && event.target !== document.getElementById('help-button')) {
+                helpPopup.style.display = 'none';
+            }
+        });
+
+        // 도움말 팝업 내부의 클릭 이벤트가 팝업을 닫지 않도록 합니다.
+        document.getElementById('help-popup').addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+
+        function startWebcam() {
+            navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" }  // 전면 카메라 사용
+            })
+            .then(stream => {
+                video.srcObject = stream;
+                return video.play();
+            })
+            .catch(console.error);
+        }
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(utterance);
+        }
+
+        function captureImage() {
+            // ... Existing code to capture and send image ...
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('image', blob);
+
+    
+            fetch('/detect', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // TTS로 클래스 이름 읽기
+                if (data.class_names) {
+                    speak(data.class_names);
+                    displayWord(data.class_names); // Call displayWord with detected class name
+                }
+            })
+            .catch(console.error);
+            },'image/jpeg');
+        }
+    
+        function displayWord(word) {
+            // 단어를 화면에 크게 표시
+            const titleElement = document.getElementById('title');
+            titleElement.textContent = word; // 결과로 텍스트 변경
+            titleElement.style.color = "red"; // 결과 표시 색상 변경
+
+            const displayElement = document.getElementById('class-name-display');
+            displayElement.textContent = word; // 대문자로 변환하여 표시
+            displayElement.style.fontSize = '5em'; // Style as per your preference
+            displayElement.style.textAlign = 'center';
+            displayElement.style.marginTop = '20px';
+            displayElement.style.letterSpacing = '0.05em';
+            displayElement.style.color = '#f464a7';
+            displayElement.style.display = 'block'; // 요소를 보이게 설정
+            document.body.appendChild(displayElement); // Append to body or to a specific container
+
+            setTimeout(() => {
+                titleElement.textContent = "카드를 보여줘";
+                titleElement.style.color = "#333"; // 원래 텍스트 색상으로 변경
+            }, 3000); // 3000 밀리초 후 실행
+        }
+    </script>
+</body>
+</html>
